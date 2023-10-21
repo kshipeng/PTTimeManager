@@ -17,7 +17,8 @@ class PTTimeRequest:
     page = None
     url = None
     referer = None
-    types = {'0':'全部','1':'普通','2':'免费','3':'2x上传','4':'50%免费','5':'2x上传&50%免费','6':'30%免费','7':'0流量'}
+    areaDic = {'1':'综合','2':'9KG'}
+    typesDic = {'0':'全部','1':'普通','2':'免费','3':'2x上传','4':'50%免费','5':'2x上传&50%免费','6':'30%免费','7':'0流量'}
     def __init__(self, cookie, ua, page, url, referer, header, area, types):
         self.cookie = cookie
         self.ua = ua
@@ -29,12 +30,11 @@ class PTTimeRequest:
         self.types = types
 
     def getArea(self):
-        return '综合' if self.area == '1' else '9KG'
+        return PTTimeRequest.areaDic[self.area]
 
 
     def getType(self):
-        
-        return PTTimeRequest.types[self.types]
+        return PTTimeRequest.typesDic[self.types]
 
     @staticmethod
     def create(cookie=None, ua=None, page=0, url=None, referer=None, area=None, types=None):
@@ -83,15 +83,7 @@ class PTTimeTorrents:
     @staticmethod
     def getLinks(request: PTTimeRequest, logPath=None):
         logFile = None
-        if logPath and logPath.isspace() != True: logFile = open(logPath, 'w', encoding='utf-8')
-        time_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        if os.path.isabs(logPath) == False:
-            logPath = os.getcwd() + '/' + os.path.basename(logPath)
-        log(" 开始 ".center(50,'#'), file=logFile)
-        log(f" {time_str} ".center(50, '='), file=logFile)
-        log(f"url: {request.url}", file=logFile)
-        log(f"日志路径: {logPath}", file=logFile) if logPath and logPath.isspace() != True else print('日志记录关闭')
-        log("#".center(50, '#'), file=logFile)
+        if logPath and logPath.isspace() != True: logFile = open(logPath, 'a', encoding='utf-8')
 
         html = request.get_html()
 
@@ -147,6 +139,22 @@ class PTTimeTorrents:
             with open(filePath, 'a', encoding='utf-8') as file:
                 file.writelines([line+'\n' for line in arr])
 
+def printInfo(area, types, page, logPath, torrentsPath):
+    logFile = None
+    time_str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    if not logPath.isspace() and os.path.isabs(logPath) == False:
+        logPath = os.getcwd() + '/' + os.path.basename(logPath)
+    if logPath and logPath.isspace() != True: logFile = open(logPath, 'a', encoding='utf-8')
+    if not torrentsPath.isspace() and os.path.isabs(torrentsPath) == False:
+        torrentsPath = os.getcwd() + '/' + os.path.basename(torrentsPath)
+    log(" 开始 ".center(50,'#'), file=logFile)
+    log(f" {time_str} ".center(50, '='), file=logFile)
+    log(f"区域: {PTTimeRequest.areaDic[area]}, 类型: {PTTimeRequest.typesDic[types]}, page: {page}", file=logFile)
+    log(f"日志文件路径: {logPath}", file=logFile) if logPath and logPath.isspace() != True else print('日志记录关闭')
+    log(f"种子文件路径: {torrentsPath}", file=logFile) if torrentsPath and torrentsPath.isspace() != True else print('种子记录关闭')
+    log("#".center(50, '#'), file=logFile)
+    if logPath and logPath.isspace() != True: logFile.close()
+
 class Manager:
     def __init__(self):
         ...
@@ -154,14 +162,14 @@ class Manager:
     @staticmethod
     def getTorrents(cookie, UA, page=0, free=0, logPath=None, torrentsPath=None):
         url = f"https://www.pttime.org/torrents.php?inclbookmarked=0&incldead=1&spstate={free}&&sort=5&type=desc&page="
-        trRquset = PTTimeRequest.create(cookie, UA, page=page, url=url, area=1, types=free)
+        trRquset = PTTimeRequest.create(cookie, UA, page=page, url=url, area='1', types=free)
         trArr = PTTimeTorrents.getLinks(trRquset, logPath)
         PTTimeTorrents.write(trArr, torrentsPath)
 
     @staticmethod
     def getTorrentsPorn(cookie, UA, page=0, free=0, logPath=None, torrentsPath=None):
         url = f"https://www.pttime.org/adults.php?inclbookmarked=0&incldead=1&spstate={free}&page="
-        trRquset = PTTimeRequest.create(cookie, UA, page=page, url=url, area=2, types=free)
+        trRquset = PTTimeRequest.create(cookie, UA, page=page, url=url, area='2', types=free)
         trArr = PTTimeTorrents.getLinks(trRquset, logPath)
         PTTimeTorrents.write(trArr, torrentsPath)
 
@@ -169,20 +177,24 @@ if __name__ == "__main__":
 
     logPath_ = './pttimeLogs.txt' #日志记录文件路径；None则不记录
     torrentsPath_ = './pttimeTorrents.text' #种子链接记录文件；None
-  
-    #设置你的cookie和UA（User-Agent）
+
+    #设置你的cookie和UA（User-Agent）。把xxx替换成你自己的
     cookie = r'xxx'
     UA = r'xxx'
-  
+    
     if cookie == 'xxx' or UA == 'xxx': {print('须设置cookie和UA'), exit()}
     print("\033[31m***不获取做种数为0的数据***\033[0m")
-    type_str = ''.join([f'{key}=>{value}; ' for key, value in PTTimeRequest.types.items()])[:-1]
+    type_str = ''.join([f'{key}=>{value}; ' for key, value in PTTimeRequest.typesDic.items()])[:-1]
+
     getArea = input('获取哪个分区？1=>综合区；2=>9KG区:')
     getType = input(f"获取哪种类型？{type_str}:")
     getPage = input('获取第几页(0开始)？:')
+
     if getArea == '1':
+        printInfo(getArea, getType, getPage, logPath_, torrentsPath_)
         Manager.getTorrents(cookie, UA, getPage, getType, logPath_, torrentsPath_)
     elif getArea == '2':
+        printInfo(getArea, getType, getPage, logPath_, torrentsPath_)
         Manager.getTorrentsPorn(cookie, UA, getPage, getType, logPath_, torrentsPath_)
     else:
         print('输入错误。退出')
