@@ -1,6 +1,6 @@
 # PTTimeManager
 
-## 使用python3构建
+使用python3构建
 
 **先在脚本中设置cookie和UA**
 
