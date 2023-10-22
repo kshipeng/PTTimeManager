@@ -161,14 +161,14 @@ class Manager:
         
     @staticmethod
     def getTorrents(cookie, UA, page=0, free=0, logPath=None, torrentsPath=None):
-        url = f"https://www.pttime.org/torrents.php?inclbookmarked=0&incldead=1&spstate={free}&&sort=5&type=desc&page="
+        url = f"https://www.pttime.org/torrents.php?inclbookmarked=0&incldead=1&spstate={free}&sort=5&type=desc&page="
         trRquset = PTTimeRequest.create(cookie, UA, page=page, url=url, area='1', types=free)
         trArr = PTTimeTorrents.getLinks(trRquset, logPath)
         PTTimeTorrents.write(trArr, torrentsPath)
 
     @staticmethod
     def getTorrentsPorn(cookie, UA, page=0, free=0, logPath=None, torrentsPath=None):
-        url = f"https://www.pttime.org/adults.php?inclbookmarked=0&incldead=1&spstate={free}&page="
+        url = f"https://www.pttime.org/adults.php?inclbookmarked=0&incldead=1&spstate={free}&sort=5&type=desc&page="
         trRquset = PTTimeRequest.create(cookie, UA, page=page, url=url, area='2', types=free)
         trArr = PTTimeTorrents.getLinks(trRquset, logPath)
         PTTimeTorrents.write(trArr, torrentsPath)
